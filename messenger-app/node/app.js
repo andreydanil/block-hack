@@ -476,7 +476,10 @@ Creating a block club is a daunting task, I'm here to help!
   }
 
   callSendAPI(messageData);
+  setTimeout(function () {
   startSurvey(recipientId);
+}, 1000)
+  
 }
 
 function handleQuickReply(recipientId, quickReplyPayload) {
