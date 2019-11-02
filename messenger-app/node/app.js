@@ -115,6 +115,7 @@ app.post('/webhook', function (req, res) {
     //
     // You must send back a 200, within 20 seconds, to let us know you've
     // successfully received the callback. Otherwise, the request will time out.
+    // console.log("Successfully received the callback. Otherwise, the request will time out.");
     res.sendStatus(200);
   }
 });
@@ -244,8 +245,9 @@ function receivedMessage(event) {
     var quickReplyPayload = quickReply.payload;
     console.log("Quick reply for message %s with payload %s",
       messageId, quickReplyPayload);
+    handleQuickReply(senderID, quickReplyPayload);
 
-    sendTextMessage(senderID, "Quick reply tapped");
+    // sendTextMessage(senderID, "Quick reply tapped");
     return;
   }
 
@@ -255,10 +257,10 @@ function receivedMessage(event) {
     // keywords and send back the corresponding example. Otherwise, just echo
     // the text we received.
     switch (messageText.replace(/[^\w\s]/gi, '').trim().toLowerCase()) {
-      case 'hello':
-      case 'hi':
-        sendHiMessage(senderID);
-        break;
+      // case 'hello':
+      // case 'hi':
+        // sendHiMessage(senderID);
+        // break;
 
       case 'image':
         requiresServerURL(sendImageMessage, [senderID]);
@@ -311,9 +313,13 @@ function receivedMessage(event) {
       case 'account linking':
         requiresServerURL(sendAccountLinking, [senderID]);
         break;
+      case 'start':
+        startBlockHack(senderID);
+        break;
 
       default:
-        sendTextMessage(senderID, messageText);
+        startBlockHack(senderID);
+        // sendTextMessage(senderID, messageText);
     }
   } else if (messageAttachments) {
     sendTextMessage(senderID, "Message with attachment received");
@@ -453,6 +459,109 @@ For more details on how to create commands, go to https://developers.facebook.co
   }
 
   callSendAPI(messageData);
+}
+
+function startBlockHack(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: `
+Welcome to Block Hack! 🏠🏠🏠
+
+Creating a block club is a daunting task, I'm here to help!
+      `
+    }
+  }
+
+  callSendAPI(messageData);
+  startSurvey(recipientId);
+}
+
+function handleQuickReply(recipientId, quickReplyPayload) {
+  console.log(quickReplyPayload);
+  if(quickReplyPayload == 'CLUB') {
+    console.log("CLUB is selected.");
+    callWebsite(recipientId, "CLUB", "Club ♣️");
+  } 
+  else if (quickReplyPayload == 'EVENT') {
+    console.log("EVENT is selected.");
+    callWebsite(recipientId, "EVENT", "Event 📅");
+  }
+  else {
+
+  }
+}
+
+function createClub(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: `
+What is the name of the Club?
+      `
+    }
+  }
+
+  sendTextMessage(recipientId, messageData);
+
+}
+
+function createEvent(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: `
+What is the name of the Event?
+      `
+    }
+  }
+
+  sendTextMessage(recipientId, messageData);
+
+}
+
+function startSurvey(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "What do you want to create?",
+      quick_replies: [
+        {
+          "content_type":"text",
+          "title":" Club",
+          "payload":"CLUB"
+        },
+        {
+          "content_type":"text",
+          "title":"Event",
+          "payload":"EVENT"
+        }
+      ]
+    }
+  };
+  callSendAPI(messageData);
+}
+
+function blockName(recipientId) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "What is the name of your block?",
+    }
+  };
+
+  callSendAPI(messageData);
+  
 }
 
 /*
@@ -615,6 +724,66 @@ function sendButtonMessage(recipientId) {
       }
     }
   };
+
+  callSendAPI(messageData);
+}
+
+/*
+ * Send a button message using the Send API.
+ *
+ */
+function callWebsite(recipientId, type, name) {
+  if(type == 'CLUB') {
+    var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "button",
+          text: "Create the " + name + " by clicking the URL below:",
+          buttons:[{
+            type: "web_url",
+            url: "https://blockhack-1cfb3.firebaseapp.com/?club",
+            title: "Open Web URL 🔗"
+          }, {
+            type: "phone_number",
+            title: "Call for help",
+            payload: "+16505551234"
+          }]
+        }
+      }
+    }
+  };
+  } else if (type == 'EVENT') {
+    var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "button",
+          text: "Create the " + name + " by clicking the URL below:",
+          buttons:[{
+            type: "web_url",
+            url: "https://blockhack-1cfb3.firebaseapp.com",
+            title: "Open Web URL 🔗"
+          }, {
+            type: "phone_number",
+            title: "Call for help",
+            payload: "+16505551234"
+          }]
+        }
+      }
+    }
+  };
+  } else {
+
+  }
 
   callSendAPI(messageData);
 }
